@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply box-border transition-all;
+}
+
+body {
+  @apply m-0 h-dvh w-full p-0 font-sans;
+}
+
+h1 {
+  @apply p-2 text-4xl font-bold;
+}
+
+@layer components {
+  .input {
+    @apply bg-transparent p-2 pl-4 pr-4 font-mono text-xl outline-none;
+  }
+
+  .button {
+    @apply mb-1 ml-2 mr-2 mt-1 cursor-pointer select-none text-xl underline underline-offset-4 hover:text-red-600;
+  }
+}

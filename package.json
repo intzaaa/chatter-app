@@ -1,0 +1,36 @@
+{
+  "name": "example-with-tailwindcss",
+  "type": "module",
+  "scripts": {
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start",
+    "format": "prettier -w ."
+  },
+  "dependencies": {
+    "@solidjs/router": "^0.13.0",
+    "@solidjs/start": "^1.0.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "solid-js": "^1.8.17",
+    "tailwindcss": "^3.4.3",
+    "vinxi": "^0.3.11"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@9.3.0+sha512.ee7b93e0c2bd11409c6424f92b866f31d3ea1bef5fbe47d3c7500cdc3c9668833d2e55681ad66df5b640c61fa9dc25d546efa54d76d7f8bf54b13614ac293631",
+  "devDependencies": {
+    "@solidjs/meta": "^0.29.4",
+    "@tailwindcss/typography": "^0.5.13",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/ramda": "^0.30.0",
+    "hash-wasm": "^4.11.0",
+    "localforage": "^1.10.0",
+    "mongodb": "^6.7.0",
+    "prettier": "^3.3.2",
+    "prettier-plugin-tailwindcss": "^0.6.4",
+    "ramda": "^0.30.1",
+    "solid-devtools": "^0.30.1"
+  }
+}
