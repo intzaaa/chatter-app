@@ -18,11 +18,6 @@ export type PrivateProfile = PublicProfile & {
 
 export type Profile = PublicProfile | PrivateProfile;
 
-export type GetProfileById = {
-  id: string;
-  auth: Auth;
-};
-
 export type GetProfilesByIds = {
   ids: string[];
   auth: Auth;
@@ -44,7 +39,6 @@ export type GetProfileByEmail = {
 };
 
 export type GetProfile =
-  | GetProfileById
   | GetProfilesByIds
   | GetProfileByUsername
   | GetProfilesByNickname
@@ -53,12 +47,13 @@ export type GetProfile =
 export type CreateProfile = {
   nickname: string;
   username: string;
+  // raw
   password: string;
   email: string;
   // auth: Auth;
 };
 
-export type AddProfile = {
+export type AddProfileToContact = {
   id: string;
   auth: Auth;
 };

@@ -14,12 +14,12 @@ export type GetMessagesByRoomId = {
   auth: Auth;
 };
 
-export type GetMessagesByMessageIds = {
+export type GetMessagesByIds = {
   messageIds: string[];
   auth: Auth;
 };
 
-export type GetMessage = GetMessagesByRoomId | GetMessagesByMessageIds;
+export type GetMessage = GetMessagesByRoomId | GetMessagesByIds;
 
 export type CreateMessage = Omit<Message, 'timestamp' | 'status'> & {
   auth: Auth;

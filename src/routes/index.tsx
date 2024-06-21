@@ -2,11 +2,12 @@ import { useNavigate } from '@solidjs/router';
 import { sha256 } from 'hash-wasm';
 import { createSignal, Match, onMount, Switch } from 'solid-js';
 
-import Card from '~/components/Card';
+// import Card from '~/components/Card';
 import Hr from '~/components/Hr';
 import config from '~/config';
 import MesseBasel from '~/images/MesseBasel.jpg';
 import RedLine from '~/images/RedLine.svg';
+import api from '~/lib/client/api';
 import { data, setData } from '~/lib/client/data';
 import { Login } from '~/types/login';
 import { CreateProfile, PrivateProfile } from '~/types/profile';
@@ -23,15 +24,15 @@ export default () => {
   let lock = false;
   return (
     <>
-      <div class="flex h-full w-full items-center justify-center">
-        <img
-          class="pointer-events-none absolute left-0 top-0 h-full w-full select-none object-cover dark:invert"
+      <div class="flex h-full w-full items-center justify-center bg-transparent">
+        {/* <img
+          class="pointer-events-none fixed left-0 top-0 h-full w-full select-none object-cover dark:invert"
           src={MesseBasel}
-        ></img>
+        ></img> */}
         <div>
-          <Card>
+          <div class="card">
             <div class="flex flex-row">
-              <Card>
+              <div class="card">
                 <div class="flex h-full flex-col justify-between">
                   <div>
                     <h1 class="text-4xl font-bold">{config.name}</h1>
@@ -44,10 +45,10 @@ export default () => {
                     src={RedLine}
                   />
                 </div>
-              </Card>
+              </div>
               <Switch>
                 <Match when={login()}>
-                  <Card size="auto">
+                  <div class="card">
                     <div class="max-w-96">
                       <h1 class="mb-2 text-4xl font-bold">Login</h1>
                       <form
@@ -59,22 +60,18 @@ export default () => {
                           const target = event.target as HTMLFormElement;
 
                           lock = true;
-                          const result = await fetch(`/api/login`, {
-                            method: 'POST',
-                            body: JSON.stringify({
-                              username: target.username.value,
-                              password: target.password.value,
-                            } as Login),
+                          const result = await api.login({
+                            username: target.username.value,
+                            password: target.password.value,
                           });
 
-                          if (result.ok) {
-                            const json =
-                              (await result.json()) as PrivateProfile;
-                            setData('self', json);
-                            navigator('/chat');
-                          } else {
+                          if (result === null) {
                             window.location.reload();
+                            return;
                           }
+
+                          setData('self', result);
+                          navigator('/chat');
                         }}
                       >
                         <input
@@ -103,10 +100,10 @@ export default () => {
                         ⇀ Create Account
                       </button>
                     </div>
-                  </Card>
+                  </div>
                 </Match>
                 <Match when={!login()}>
-                  <Card size="auto">
+                  <div class="card">
                     <div class="max-w-96">
                       <h1 class="mb-2 text-4xl font-bold">Create Account</h1>
                       <form
@@ -117,24 +114,20 @@ export default () => {
                           const target = event.target as HTMLFormElement;
 
                           lock = true;
-                          const result = await fetch('/api/create/profile', {
-                            method: 'POST',
-                            body: JSON.stringify({
-                              nickname: target.nickname.value,
-                              username: target.username.value,
-                              password: target.password.value,
-                              email: target.email.value,
-                            } as CreateProfile),
-                          });
+                          const result = await api.create.profile({
+                            nickname: target.nickname.value,
+                            username: target.username.value,
+                            password: target.password.value,
+                            email: target.email.value,
+                          } as CreateProfile);
 
-                          if (result.ok) {
-                            const json =
-                              (await result.json()) as PrivateProfile;
-                            setData('self', json);
-                            navigator('/chat');
-                          } else {
+                          if (result === null) {
                             window.location.reload();
+                            return;
                           }
+
+                          setData('self', result);
+                          navigator('/chat');
                         }}
                       >
                         <input
@@ -175,11 +168,11 @@ export default () => {
                         ⇀ Login
                       </button>
                     </div>
-                  </Card>
+                  </div>
                 </Match>
               </Switch>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </>

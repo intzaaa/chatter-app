@@ -1,10 +1,13 @@
 import { APIEvent } from '@solidjs/start/server';
 
 import { getDb, auth } from '~/lib/server/db';
-import { AddProfile, PrivateProfile } from '~/types/profile';
+import { AddProfileToContact, PrivateProfile } from '~/types/profile';
 
 export const POST = async (event: APIEvent) => {
-  const request = (await event.request.json()) as AddProfile;
+  const request = (await event.request.json()) as AddProfileToContact;
+
+  if (request.id === request.auth.id)
+    return new Response('Cannot add self', { status: 400 });
 
   const db = await getDb();
 
@@ -23,9 +26,7 @@ export const POST = async (event: APIEvent) => {
   const result = await collection.findOneAndUpdate(
     {
       id: request.auth.id,
-      $not: {
-        contactIds: { $in: request.id },
-      },
+      $nor: [{ contactIds: [request.id] }],
     },
     {
       $push: {
@@ -37,5 +38,7 @@ export const POST = async (event: APIEvent) => {
   if (result === null)
     return new Response('Profile not added', { status: 404 });
 
-  return result;
+  return await collection.findOne({
+    id: request.id,
+  });
 };

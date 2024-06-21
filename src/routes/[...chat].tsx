@@ -1,13 +1,24 @@
 import { useNavigate, useParams } from '@solidjs/router';
-import { isEmpty, isNil } from 'ramda';
-import { JSX, createEffect, createResource, onMount } from 'solid-js';
+import { isEmpty, isNil, remove, set } from 'ramda';
+import {
+  JSX,
+  ParentComponent,
+  createEffect,
+  createResource,
+  onMount,
+} from 'solid-js';
 import { Component, createSignal } from 'solid-js';
+import { createStore } from 'solid-js/store';
+import { Portal } from 'solid-js/web';
 
-import Card from '~/components/Card';
+// import Card from '~/components/Card';
 import Chat from '~/components/Chat';
 import Hr from '~/components/Hr';
+import { createWindows } from '~/components/Windows';
+import api from '~/lib/client/api';
 import { data, setData } from '~/lib/client/data';
-import { PublicProfile } from '~/types/profile';
+import { refetchData } from '~/lib/client/data';
+import { AddProfileToContact } from '~/types/profile';
 import { CreateRoom, GetRoomsByMemberIds, Room } from '~/types/room';
 
 const base = 'chat';
@@ -34,14 +45,6 @@ const Item: Component<{
   );
 };
 
-const ChatWindow: Component<{}> = () => {
-  return (
-    <dialog class="fixed w-full h-full bg-transparent flex flex-col items-center justify-center p-16 max-w-[1024px]">
-      <Card size="full"></Card>
-    </dialog>
-  );
-};
-
 export default () => {
   const params = useParams();
   const navigate = useNavigate();
@@ -49,56 +52,33 @@ export default () => {
   const [date, setTime] = createSignal(new Date());
   setInterval(() => setTime(new Date()), 1000);
 
-  const refreshContacts = async () => {
-    if (isEmpty(data.self?.contactIds)) return;
-    const contacts = await fetch('/api/get/profile', {
-      method: 'POST',
-      body: JSON.stringify({
-        auth: {
-          id: data.self!.id,
-          password: data.self!.password,
-        },
-        ids: data.self?.contactIds,
-      }),
-    });
-
-    if (contacts.ok) {
-      const json = await contacts.json();
-      setData('contacts', json);
-    }
-  };
-
-  const refreshRooms = async () => {
-    const rooms = await fetch('/api/get/room', {
-      method: 'POST',
-      body: JSON.stringify({
-        auth: {
-          id: data.self!.id,
-          password: data.self!.password,
-        },
-        memberIds: [data.self!.id],
-      } as GetRoomsByMemberIds),
-    });
-
-    if (rooms.ok) {
-      const json = await rooms.json();
-      setData('rooms', json);
-    }
-  };
-
-  onMount(() => {
-    refreshContacts();
-    refreshRooms();
-  });
+  const { component: Windows, openWindow, closeWindow } = createWindows();
 
   createEffect(() => {
-    console.log(data);
+    if (params[base].length > base.length) {
+      const window = (
+        <Chat
+          id={params[base]}
+          close={() => {
+            closeWindow(window);
+            navigate(`/${base}`);
+          }}
+        ></Chat>
+      );
+      openWindow(window);
+    }
+  });
+
+  onMount(async () => {
+    await refetchData.self();
+    await refetchData.contacts();
+    await refetchData.rooms();
   });
   return (
     <div class="w-full h-full flex flex-col items-center justify-center p-8">
-      <Card type="bold" size="full">
-        <Card>
-          <div class="text-4xl p-2 flex flex-row gap-4">
+      <div class="card w-full h-full flex flex-col items-center justify-center overflow-clip">
+        <div class="card w-full h-fit grow-0 shrink-0">
+          <div class="text-4xl w-full h-fit flex flex-row gap-4">
             <div class="text-nowrap font-bold grow">
               {(() => {
                 const hours = date().getHours();
@@ -116,10 +96,72 @@ export default () => {
               {date().toLocaleTimeString()}
             </div>
           </div>
-        </Card>
-        <div class="w-full h-full flex flex-col justify-center items-center md:flex-row">
-          <Card size="full" scroll>
-            <h1 class="mb-2">Contacts</h1>
+        </div>
+        <div class="w-full h-0 grow flex overflow-clip flex-col justify-center items-center md:flex-row m-0">
+          <div class="card w-full h-full ">
+            <div class="flex flex-row justify-between items-center">
+              <h1 class="mb-2">Contacts</h1>
+
+              <div>
+                <button
+                  onClick={async () => {
+                    console.log('refreshing contacts');
+                    await refetchData.contacts();
+                  }}
+                >
+                  <h1 class="icon">refresh</h1>
+                </button>
+                <button
+                  onClick={(event) => {
+                    const window = (
+                      <div class="card overflow-x-clip overflow-y-scroll">
+                        <form
+                          class="flex flex-fow w-96"
+                          onSubmit={async (event) => {
+                            event.preventDefault();
+                            const target = event.target as HTMLFormElement;
+                            const id = target._id.value;
+
+                            if (id === '') {
+                              closeWindow(window);
+                              return;
+                            }
+
+                            const result = await api.add.contact({
+                              auth: {
+                                id: data.self!.id,
+                                password: data.self!.password,
+                              },
+                              id,
+                            } as AddProfileToContact);
+
+                            if (result === null) return;
+
+                            setData('contacts', (contacts) =>
+                              contacts ? [...contacts, result] : [result],
+                            );
+                            closeWindow(window);
+                          }}
+                        >
+                          <input
+                            name="_id"
+                            class="input w-full"
+                            placeholder="ID"
+                          ></input>
+                          <button type="submit" class="icon text-3xl p-2">
+                            check
+                          </button>
+                        </form>
+                      </div>
+                    );
+
+                    openWindow(window);
+                  }}
+                >
+                  <h1 class="icon">add</h1>
+                </button>
+              </div>
+            </div>
 
             {data?.contacts?.map((profile, index, array) => (
               <>
@@ -138,42 +180,35 @@ export default () => {
                     if (_room) {
                       navigate(`/${base}/${_room.id}`);
                     }
-                    const room = await fetch('/api/get/room', {
-                      method: 'POST',
-                      body: JSON.stringify({
+                    const result = await api.get.room.byMemberIds({
+                      auth: {
+                        id: data!.self!.id,
+                        password: data!.self!.password,
+                      },
+                      memberIds: [data!.self!.id, profile.id],
+                    });
+
+                    if (result !== null) {
+                      const room = result[0];
+                      navigate(`/${base}/${room.id}`);
+                    } else {
+                      const creation = await api.create.room({
                         auth: {
                           id: data!.self!.id,
                           password: data!.self!.password,
                         },
-                        memberIds: [data!.self!.id, profile.id],
-                      } as GetRoomsByMemberIds),
-                    });
+                        name: `${data!.self!.nickname} & ${profile.nickname}`,
+                        type: 'private',
+                        otherMemberIds: [profile.id],
+                      });
 
-                    if (room.ok) {
-                      const json = await room.json();
-                      console.log(json);
-                      if (isEmpty(json)) {
-                        const create = await fetch('/api/create/room', {
-                          method: 'POST',
-                          body: JSON.stringify({
-                            auth: {
-                              id: data!.self!.id,
-                              password: data!.self!.password,
-                            },
-                            name: `${data!.self!.nickname} & ${profile.nickname}`,
-                            type: 'private',
-                            otherMemberIds: [data!.self!.id, profile.id],
-                          } as CreateRoom),
-                        });
-
-                        if (create.ok) {
-                          const json = await create.json();
-                          setData('rooms', (rooms) =>
-                            rooms ? [...rooms, json] : [json],
-                          );
-                          navigate(`/${base}/${json.id}`);
-                        }
+                      if (creation === null) {
+                        return;
                       }
+                      setData('rooms', (rooms) =>
+                        rooms ? [...rooms, creation] : [creation],
+                      );
+                      navigate(`/${base}/${creation.id}`);
                     }
                   }}
                   image={profile.avatar}
@@ -183,9 +218,9 @@ export default () => {
                 {index !== array.length - 1 && <Hr></Hr>}
               </>
             ))}
-          </Card>
+          </div>
 
-          <Card size="full" scroll>
+          <div class="card w-full h-full overflow-y-scroll">
             <h1 class="mb-2">Rooms</h1>
             {data?.rooms
               ?.filter((room) =>
@@ -194,6 +229,9 @@ export default () => {
               .map((room, index, array) => (
                 <>
                   <Item
+                    click={() => {
+                      navigate(`/${base}/${room.id}`);
+                    }}
                     image={room.avatar}
                     name={room.name}
                     detail={room.type}
@@ -201,10 +239,10 @@ export default () => {
                   {index !== array.length - 1 && <Hr></Hr>}
                 </>
               ))}
-          </Card>
+          </div>
         </div>
-      </Card>
-      {params[base].length > base.length && <ChatWindow></ChatWindow>}
+      </div>
+      <Windows></Windows>
     </div>
   );
 };

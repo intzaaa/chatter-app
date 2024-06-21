@@ -28,6 +28,9 @@ export const POST = async (event: APIEvent) => {
   const room = await rCollection.findOneAndUpdate(
     {
       id: request.roomId,
+      messageIds: {
+        $not: { $elemMatch: { $in: request.ids } },
+      },
     },
     {
       $push: {
@@ -36,7 +39,7 @@ export const POST = async (event: APIEvent) => {
     },
   );
 
-  if (room === null) return new Response('Room not found', { status: 404 });
+  if (room === null) return new Response('Message not added', { status: 404 });
 
   return room;
 };

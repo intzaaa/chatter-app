@@ -3,7 +3,12 @@
 @tailwind utilities;
 
 * {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   @apply box-border transition-all;
+}
+
+.icon {
+  font-family: 'Material Symbols Sharp Variable', sans-serif;
 }
 
 body {
@@ -21,5 +26,9 @@ h1 {
 
   .button {
     @apply mb-1 ml-2 mr-2 mt-1 cursor-pointer select-none text-xl underline underline-offset-4 hover:text-red-600;
+  }
+
+  .card {
+    @apply bg-white bg-cover p-3 text-black opacity-60 shadow-sm outline outline-2 -outline-offset-4 hover:opacity-90 hover:shadow-lg dark:border-white dark:bg-black dark:text-white;
   }
 }

@@ -1,5 +1,6 @@
 import { APIEvent } from '@solidjs/start/server';
 import { sha256 } from 'hash-wasm';
+import { uniq, uniqBy, uniqWith } from 'ramda';
 
 import { getDb, auth } from '~/lib/server/db';
 import { Room, CreateRoom } from '~/types/room';
@@ -15,19 +16,23 @@ export const POST = async (event: APIEvent) => {
   const collection = db.collection<Room>('rooms');
 
   const room: Room = {
-    ...request,
     id: await sha256(performance.now().toString()),
+    name: request.name,
+    type: 'private',
     avatar: '',
-    members: [
-      {
-        id: request.auth.id,
-        power: 0,
-      },
-      ...request.otherMemberIds.map((id) => ({
-        id,
-        power: 50,
-      })),
-    ],
+    members: uniqBy(
+      (m) => m.id,
+      [
+        {
+          id: request.auth.id,
+          power: 0,
+        },
+        ...request.otherMemberIds.map((id) => ({
+          id,
+          power: 50,
+        })),
+      ],
+    ),
     messageIds: [],
   };
 

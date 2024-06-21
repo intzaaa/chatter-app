@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@fontsource-variable/material-symbols-sharp':
+        specifier: ^5.0.33
+        version: 5.0.33
       '@solidjs/router':
         specifier: ^0.13.0
         version: 0.13.5(solid-js@1.8.17)
@@ -617,6 +620,9 @@ packages:
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
+
+  '@fontsource-variable/material-symbols-sharp@5.0.33':
+    resolution: {integrity: sha512-22uw9yYTMFa2XKlN6L+W5azyAG0IVuIOm/bo8uWyBP6HWSb8IVtYcHJpXnMeZvIP7tp15L7N8HoGYfglnjlyGg==}
 
   '@ioredis/commands@1.2.0':
     resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
@@ -3557,6 +3563,8 @@ snapshots:
     optional: true
 
   '@fastify/busboy@2.1.1': {}
+
+  '@fontsource-variable/material-symbols-sharp@5.0.33': {}
 
   '@ioredis/commands@1.2.0': {}
 

@@ -30,7 +30,7 @@ export const POST = async (event: APIEvent) => {
   }
 
   if (request.messageIds) {
-    const _request = request as T.GetMessagesByMessageIds;
+    const _request = request as T.GetMessagesByIds;
     const messages = await collection
       .find({ id: { $in: _request.messageIds } })
       .toArray();

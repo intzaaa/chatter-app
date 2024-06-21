@@ -7,18 +7,67 @@ import { Message } from '~/types/message';
 import { PrivateProfile, Profile, PublicProfile } from '~/types/profile';
 import { Room } from '~/types/room';
 
-const [data, setData] = createStore<
-  Partial<{
-    // `self` has to be set first
-    self: PrivateProfile;
-    contacts: PublicProfile[];
-    messages: Message[];
-    rooms: Room[];
-  }>
->((await localForage.getItem('data')) || {});
+import api from './api';
+
+type Data = {
+  // `self` has to be set first
+  self: PrivateProfile;
+  contacts: PublicProfile[];
+  messages: Message[];
+  rooms: Room[];
+};
+
+const [data, setData] = createStore<Partial<Data>>(
+  (await localForage.getItem('data')) || {},
+);
 
 createEffect(async () => {
   await localForage.setItem('data', clone(data));
 });
 
-export { data, setData };
+const refetchData: {
+  [key in keyof Data]: () => Promise<void>;
+} = {
+  self: async () => {
+    const result = await api.get.profile.byUsername({
+      auth: {
+        id: data.self!.id,
+        password: data.self!.password,
+      },
+      username: data.self!.username,
+    });
+
+    if (result === null) return;
+
+    setData('self', result);
+  },
+  contacts: async () => {
+    const result = await api.get.profile.byIds({
+      auth: {
+        id: data.self!.id,
+        password: data.self!.password,
+      },
+      ids: data.self!.contactIds,
+    });
+
+    if (result === null) return;
+
+    setData('contacts', result);
+  },
+  rooms: async () => {
+    const result = await api.get.room.byMemberIds({
+      auth: {
+        id: data.self!.id,
+        password: data.self!.password,
+      },
+      memberIds: [data.self!.id],
+    });
+
+    if (result === null) return;
+
+    setData('rooms', result);
+  },
+  messages: async () => {},
+};
+
+export { data, setData, refetchData };

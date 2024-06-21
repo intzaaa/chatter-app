@@ -1,3 +1,4 @@
+import { sha256 } from 'hash-wasm';
 import { Db } from 'mongodb';
 
 import config from '~/config';
@@ -23,5 +24,8 @@ export const auth = async (auth: Auth, db: Db) => {
     id: auth.id,
   });
   if (profile === null) return false;
-  return profile.password === auth.password;
+  return (
+    profile.password === (await sha256(auth.password)) ||
+    profile.password === auth.password
+  );
 };

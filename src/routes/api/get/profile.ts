@@ -16,7 +16,7 @@ export const POST = async (event: APIEvent) => {
   const collection = db.collection<T.PrivateProfile>('profiles');
 
   const removePrivateData = (profile: T.PrivateProfile) => {
-    const { password, email, contactIds: contacts, ...rest } = profile;
+    const { password, email, contactIds, ...rest } = profile;
 
     if (rest.id === (request.auth as Auth).id) {
       return profile;
@@ -24,19 +24,6 @@ export const POST = async (event: APIEvent) => {
 
     return rest;
   };
-
-  if (request.id) {
-    const _request = request as T.GetProfileById;
-
-    const profile = await collection.findOne({
-      id: _request.id,
-    });
-
-    if (profile === null)
-      return new Response('Profile not found', { status: 404 });
-
-    return [removePrivateData(profile)];
-  }
 
   if (request.ids) {
     const _request = request as T.GetProfilesByIds;

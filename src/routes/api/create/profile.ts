@@ -17,6 +17,7 @@ export async function POST(event: APIEvent) {
   const profile: PrivateProfile = {
     ...request,
     id: await sha256(performance.now().toString()),
+    password: await sha256(request.password),
     gender: 'Unknown',
     status: '',
     avatar: '',

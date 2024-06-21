@@ -12,7 +12,7 @@ export const POST = async (event: APIEvent) => {
   if (!(await auth(request.auth, db)))
     return new Response('Unauthorized', { status: 401 });
 
-  const collection = db.collection<T.Room>('messages');
+  const collection = db.collection<T.Room>('rooms');
 
   if (request.id) {
     const _request = request as T.GetRoomById;
@@ -20,7 +20,7 @@ export const POST = async (event: APIEvent) => {
       id: _request.id,
     });
 
-    if (!room) return new Response('Room not found', { status: 404 });
+    if (room === null) return new Response('Room not found', { status: 404 });
 
     return [room];
   }
@@ -35,18 +35,6 @@ export const POST = async (event: APIEvent) => {
 
     if (isEmpty(rooms)) return new Response('Room not found', { status: 404 });
 
-    if (request.memberIds) {
-      const _request = request as T.GetRoomsByMemberIds;
-      const rooms = await collection
-        .find({
-          members: { $elemMatch: { id: { $in: _request.memberIds } } },
-        })
-        .toArray();
-
-      if (isEmpty(rooms))
-        return new Response('Room not found', { status: 404 });
-    }
-
     return rooms;
   }
 
@@ -54,7 +42,7 @@ export const POST = async (event: APIEvent) => {
     const _request = request as T.GetRoomsByMemberIds;
     const rooms = await collection
       .find({
-        members: { $elemMatch: { id: { $in: _request.memberIds } } },
+        'members.id': { $all: _request.memberIds },
       })
       .toArray();
 
@@ -62,6 +50,4 @@ export const POST = async (event: APIEvent) => {
 
     return rooms;
   }
-
-  return new Response('Bad Request', { status: 400 });
 };

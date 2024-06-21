@@ -8,6 +8,7 @@
     "format": "prettier -w ."
   },
   "dependencies": {
+    "@fontsource-variable/material-symbols-sharp": "^5.0.33",
     "@solidjs/router": "^0.13.0",
     "@solidjs/start": "^1.0.0",
     "autoprefixer": "^10.4.19",
