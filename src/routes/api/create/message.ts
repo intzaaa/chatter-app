@@ -15,8 +15,10 @@ export const POST = async (event: APIEvent) => {
   const collection = db.collection<Message>('messages');
 
   const message: Message = {
-    ...request,
     id: await sha256(performance.now().toString()),
+    owner: request.auth.id,
+    rooms: [request.roomId],
+    content: request.content,
     timestamp: Date.now(),
   };
 

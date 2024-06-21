@@ -19,7 +19,7 @@ export const POST = async (event: APIEvent) => {
     const messages = await collection
       .find({
         rooms: [_request.roomId],
-        timestamp: { $gte: _request.sinceTimestamp },
+        timestamp: { $gte: _request.from, $lte: _request.to },
       })
       .toArray();
 

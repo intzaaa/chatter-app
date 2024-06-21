@@ -58,14 +58,13 @@ export default () => {
     if (params[base].length > base.length) {
       const window = (
         <Chat
-          id={params[base]}
+          id={params[base].replace(`${base}/`, '')}
           close={() => {
             closeWindow(window);
-            navigate(`/${base}`);
           }}
         ></Chat>
       );
-      openWindow(window);
+      openWindow(window, () => navigate(`/${base}`));
     }
   });
 
@@ -137,9 +136,7 @@ export default () => {
 
                             if (result === null) return;
 
-                            setData('contacts', (contacts) =>
-                              contacts ? [...contacts, result] : [result],
-                            );
+                            await refetchData.contacts();
                             closeWindow(window);
                           }}
                         >
@@ -205,9 +202,8 @@ export default () => {
                       if (creation === null) {
                         return;
                       }
-                      setData('rooms', (rooms) =>
-                        rooms ? [...rooms, creation] : [creation],
-                      );
+
+                      await refetchData.rooms();
                       navigate(`/${base}/${creation.id}`);
                     }
                   }}

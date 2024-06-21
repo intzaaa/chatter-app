@@ -10,7 +10,8 @@ export type Message = {
 
 export type GetMessagesByRoomId = {
   roomId: string;
-  sinceTimestamp: number;
+  from: number;
+  to: number;
   auth: Auth;
 };
 
@@ -21,13 +22,14 @@ export type GetMessagesByIds = {
 
 export type GetMessage = GetMessagesByRoomId | GetMessagesByIds;
 
-export type CreateMessage = Omit<Message, 'timestamp' | 'status'> & {
+export type CreateMessage = {
+  roomId: string;
+  content: string;
   auth: Auth;
 };
 
 export type AddMessages = {
   ids: string[];
   roomId: string;
-
   auth: Auth;
 };

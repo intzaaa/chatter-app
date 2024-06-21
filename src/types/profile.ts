@@ -33,16 +33,16 @@ export type GetProfilesByNickname = {
   auth: Auth;
 };
 
-export type GetProfileByEmail = {
-  email: string;
-  auth: Auth;
-};
+// export type GetProfileByEmail = {
+//   email: string;
+//   auth: Auth;
+// };
 
 export type GetProfile =
   | GetProfilesByIds
   | GetProfileByUsername
-  | GetProfilesByNickname
-  | GetProfileByEmail;
+  | GetProfilesByNickname;
+// | GetProfileByEmail;
 
 export type CreateProfile = {
   nickname: string;

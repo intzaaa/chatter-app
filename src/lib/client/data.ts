@@ -9,12 +9,16 @@ import { Room } from '~/types/room';
 
 import api from './api';
 
+type At = {
+  at: number;
+};
+
 type Data = {
   // `self` has to be set first
-  self: PrivateProfile;
-  contacts: PublicProfile[];
-  messages: Message[];
-  rooms: Room[];
+  self: PrivateProfile & At;
+  contacts: (PublicProfile & At)[];
+  messages: (Message & At)[];
+  rooms: (Room & At)[];
 };
 
 const [data, setData] = createStore<Partial<Data>>(
@@ -52,7 +56,10 @@ const refetchData: {
 
     if (result === null) return;
 
-    setData('contacts', result);
+    setData(
+      'contacts',
+      result.map((profile) => ({ ...profile, at: Date.now() })),
+    );
   },
   rooms: async () => {
     const result = await api.get.room.byMemberIds({
@@ -65,7 +72,10 @@ const refetchData: {
 
     if (result === null) return;
 
-    setData('rooms', result);
+    setData(
+      'rooms',
+      result.map((room) => ({ ...room, at: Date.now() })),
+    );
   },
   messages: async () => {},
 };
