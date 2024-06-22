@@ -1,4 +1,4 @@
-import { isEmpty } from 'ramda';
+import { cond, isEmpty } from 'ramda';
 
 import type { Login } from '~/types/login';
 import type * as TM from '~/types/message';
@@ -25,10 +25,32 @@ const f = async <R, F>(endpoint: string, fallback: F, body: any) => {
   }
 };
 
-const getProfiles = async (
-  input: TP.GetProfilesByNickname | TP.GetProfilesByIds,
-) => {
-  return await f<TP.Profile[], []>('/api/get/profile', [], input);
+const p = async <R>(
+  input: TP.GetProfile,
+  condition: (profile: TP.Profile) => boolean,
+  rev: (profile: TP.Profile[]) => R,
+): Promise<R> => {
+  const local = [...(data.contacts ?? []), data.self!].filter((profile) =>
+    condition(profile),
+  );
+
+  if (
+    local &&
+    local.length > 0 &&
+    Date.now() - local[0].at < expirationDuration
+  )
+    return local as R;
+
+  const result = await f<TP.Profile[], []>('/api/get/profile', [], input);
+
+  setData('contacts', (profiles) => [
+    ...(profiles ?? []),
+    ...result
+      .filter((profile) => profile.id !== data.self!.id)
+      .map((profile) => ({ ...profile, at: Date.now() })),
+  ]);
+
+  return rev(result) as R;
 };
 
 export default {
@@ -36,81 +58,26 @@ export default {
     await f<TP.PrivateProfile, null>('/api/login', null, input),
   get: {
     profile: {
-      byIds: async (input: TP.GetProfilesByIds) => {
-        const local = [...data.contacts!, data.self!].filter((profile) =>
-          input.ids.includes(profile.id),
-        );
-
-        if (
-          local &&
-          local.length > 0 &&
-          Date.now() - local[0].at < expirationDuration
-        )
-          return local;
-
-        const result = await f<TP.Profile[], []>('/api/get/profile', [], input);
-        if (isEmpty(result)) return [];
-
-        setData('contacts', (profiles) =>
-          profiles
-            ? [
-                ...profiles,
-                ...result.map((profile) => ({ ...profile, at: Date.now() })),
-              ]
-            : result.map((profile) => ({ ...profile, at: Date.now() })),
-        );
-        return result;
-      },
-      byNickname: async (input: TP.GetProfilesByNickname) => {
-        const local = [...data.contacts!, data.self!].filter(
-          (profile) => profile.nickname === input.nickname,
-        );
-
-        if (
-          local &&
-          local.length > 0 &&
-          Date.now() - local[0].at < expirationDuration
-        )
-          return local;
-
-        const result = await f<TP.Profile[], []>('/api/get/profile', [], input);
-        if (isEmpty(result)) return [];
-
-        setData('contacts', (profiles) =>
-          profiles
-            ? [
-                ...profiles,
-                ...result.map((profile) => ({ ...profile, at: Date.now() })),
-              ]
-            : result.map((profile) => ({ ...profile, at: Date.now() })),
-        );
-        return result;
-      },
       byUsername: async (
         input: TP.GetProfileByUsername,
-      ): Promise<TP.Profile | null> => {
-        const local = [...data.contacts!, data.self!].find(
-          (profile) => profile.username === input.username,
-        );
-
-        if (local && Date.now() - local.at < expirationDuration) return local;
-
-        const result = await f<TP.Profile[], null>(
-          '/api/get/profile',
-          null,
+      ): Promise<TP.Profile | null> =>
+        await p(
           input,
-        );
-        if (result === null) return null;
-
-        if (input.username === data.self!.username) setData('self', result[0]);
-        else
-          setData('contacts', (profiles) =>
-            profiles
-              ? [...profiles, { ...result[0], at: Date.now() }]
-              : [{ ...result[0], at: Date.now() }],
-          );
-        return result[0];
-      },
+          (profile) => profile.username === input.username,
+          (o) => (isEmpty(o) ? null : o[0]),
+        ),
+      byIds: async (input: TP.GetProfilesByIds) =>
+        await p(
+          input,
+          (profile) => input.ids.includes(profile.id),
+          (o) => o,
+        ),
+      byNickname: async (input: TP.GetProfilesByNickname) =>
+        await p(
+          input,
+          (profile) => input.nickname === profile.nickname,
+          (o) => o,
+        ),
       // byEmail: async (input: TP.GetProfileByEmail) => await getProfile(input),
     },
     room: {

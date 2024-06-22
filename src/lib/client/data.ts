@@ -43,7 +43,7 @@ const refetchData: {
 
     if (result === null) return;
 
-    setData('self', result);
+    setData('self', result as PrivateProfile);
   },
   contacts: async () => {
     const result = await api.get.profile.byIds({

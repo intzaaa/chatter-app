@@ -14,36 +14,14 @@ import { Portal } from 'solid-js/web';
 // import Card from '~/components/Card';
 import Chat from '~/components/Chat';
 import Hr from '~/components/Hr';
+import Item from '~/components/Item';
 import { createWindows } from '~/components/Windows';
 import api from '~/lib/client/api';
 import { data, setData } from '~/lib/client/data';
 import { refetchData } from '~/lib/client/data';
 import { AddProfileToContact } from '~/types/profile';
-import { CreateRoom, GetRoomsByMemberIds, Room } from '~/types/room';
 
 const base = 'chat';
-
-const Item: Component<{
-  image: string;
-  name: string;
-  detail: string;
-  click?: JSX.EventHandlerUnion<HTMLDivElement, MouseEvent>;
-}> = ({ image, name, detail, click }) => {
-  return (
-    <div
-      class="flex flex-row w-full p-2 h-16 gap-4 items-center cursor-pointer"
-      onClick={click}
-    >
-      {image === '' ? (
-        <div class="w-auto h-full aspect-square bg-gray-500"></div>
-      ) : (
-        <img class="w-auto h-full aspect-square" alt={name} src={image}></img>
-      )}
-      <div class="text-2xl font-bold">{name}</div>
-      <div class="text-2xl font-thin opacity-75">{detail}</div>
-    </div>
-  );
-};
 
 export default () => {
   const params = useParams();
@@ -68,10 +46,15 @@ export default () => {
     }
   });
 
-  onMount(async () => {
-    await refetchData.self();
-    await refetchData.contacts();
-    await refetchData.rooms();
+  onMount(() => {
+    setInterval(
+      async () => {
+        await refetchData.self();
+        await refetchData.contacts();
+        await refetchData.rooms();
+      },
+      1000 * 60 * 5,
+    );
   });
   return (
     <div class="w-full h-full flex flex-col items-center justify-center p-8">
